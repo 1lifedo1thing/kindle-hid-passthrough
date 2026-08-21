@@ -30,9 +30,10 @@ from logging_utils import log
 
 HID_REPORT_TYPE_INPUT = 1
 
-# Standard Bluetooth Battery Service and Battery Level characteristic
-GATT_BATTERY_SERVICE = 0x180F
-GATT_BATTERY_LEVEL_CHARACTERISTIC = 0x2A19
+# Standard Bluetooth Battery Service and Battery Level characteristic.
+# Bumble exposes 16-bit UUIDs as little-endian bytes (e.g. b'\x0f\x18' = 0x180F).
+GATT_BATTERY_SERVICE = b'\x0f\x18'
+GATT_BATTERY_LEVEL_CHARACTERISTIC = b'\x19\x2a'
 
 # How often to re-read the battery level while a BLE device is connected
 BATTERY_POLL_INTERVAL = 300  # seconds

@@ -2,6 +2,7 @@
 """BLE HID handler mixin for HIDHost."""
 
 import asyncio
+import time
 
 from bumble.core import AdvertisingData, BT_LE_TRANSPORT, InvalidStateError
 from bumble.device import Device, Peer
@@ -28,6 +29,13 @@ from config import Protocol, config, normalize_addr, clean_device_name
 from logging_utils import log
 
 HID_REPORT_TYPE_INPUT = 1
+
+# Standard Bluetooth Battery Service and Battery Level characteristic
+GATT_BATTERY_SERVICE = 0x180F
+GATT_BATTERY_LEVEL_CHARACTERISTIC = 0x2A19
+
+# How often to re-read the battery level while a BLE device is connected
+BATTERY_POLL_INTERVAL = 300  # seconds
 
 
 class BLEMixin:
@@ -141,6 +149,51 @@ class BLEMixin:
         self._load_cached_descriptor(session)
         await self._setup_ble_hid(session)
         log.success(f"[BLE] {self._format_device(session.address)} receiving HID reports")
+        # Fire-and-forget: read the standard Battery Service right away.
+        self._track_task(asyncio.create_task(self._read_ble_battery(session)))
+
+    async def _read_ble_battery(self, session):
+        """Read the Battery Level characteristic (0x2A19) once, if present."""
+        peer = session.peer
+        if peer is None or session.protocol != Protocol.BLE:
+            return None
+        try:
+            if not peer.services:
+                await peer.discover_services()
+            for service in peer.services:
+                if service.uuid != GATT_BATTERY_SERVICE:
+                    continue
+                if not service.characteristics:
+                    await peer.discover_characteristics(service=service)
+                for char in service.characteristics:
+                    if char.uuid != GATT_BATTERY_LEVEL_CHARACTERISTIC:
+                        continue
+                    value = await peer.read_value(char)
+                    if value:
+                        session.battery_level = int(value[0])
+                        session.battery_updated = time.time()
+                        log.success(
+                            f"[BLE] {self._format_device(session.address)} battery: "
+                            f"{session.battery_level}%")
+                        return session.battery_level
+                    return None
+                log.info(f"[BLE] Battery service found but no 0x2A19 on {session.address}")
+                return None
+            log.debug(f"[BLE] No Battery Service (0x180F) on {session.address}")
+        except Exception as e:
+            log.warning(f"[BLE] Battery read failed for {session.address}: {e}")
+        return None
+
+    async def _run_ble_battery_poller(self):
+        """Periodically refresh battery levels for live BLE sessions."""
+        while True:
+            await asyncio.sleep(BATTERY_POLL_INTERVAL)
+            for session in list(self.sessions.values()):
+                if session.protocol == Protocol.BLE and session.is_alive():
+                    try:
+                        await self._read_ble_battery(session)
+                    except Exception as e:
+                        log.warning(f"[BLE] Battery poll failed for {session.address}: {e}")
 
     async def _ble_initiate(self, window: float, peer: Address = None):
         """Legacy create-connection to `peer`, or to the accept list when

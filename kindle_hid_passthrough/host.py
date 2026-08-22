@@ -611,3 +611,530 @@ class HIDHost(ClassicMixin, BLEMixin):
             self.transport = None
             from bt_setup import chip
             chip().on_transport_close()
+
+
+Microsoft Windows [版本 10.0.19045.6466]
+(c) Microsoft Corporation。保留所有权利。
+
+C:\Users\AQ\Downloads>scp kindle-hid-passthrough-armv7_dev.tar.gz root@192.168.0.104:/mnt/us/
+root@192.168.0.104's password:
+kindle-hid-passthrough-armv7_dev.tar.gz                                               100%   23MB   2.1MB/s   00:11
+
+C:\Users\AQ\Downloads>ssh root@192.168.0.104
+root@192.168.0.104's password:
+#################################################
+#  N O T I C E  *  N O T I C E  *  N O T I C E  #
+#################################################
+Rootfs is mounted read-only. Invoke mntroot rw to
+switch back to a writable rootfs.
+#################################################
+[root@kindle us]# tar -xzf kindle-hid-passthrough-armv7_dev.tar.gz -C /mnt/us/khp-release-dev
+[root@kindle us]# sh /mnt/us/khp-release-dev/scripts/install.sh update
+
+=== Install / Update ===
+Existing install found at /mnt/us/kindle_hid_passthrough, updating it in place.
+ -> Stopping daemon
+hid-passthrough stop/waiting
+ -> Installing main program files
+ -> Kept your config.ini, new defaults written to config.ini.new
+ -> Ready.
+ -> Installing udev rules
+system: I mntroot:def:Making root filesystem writeable
+system: I mntroot:def:Making root filesystem read-only
+ -> Ready.
+ -> Installing upstart service
+system: I mntroot:def:Making root filesystem writeable
+system: I mntroot:def:Making root filesystem read-only
+ -> Ready.
+ -> Installing BTManager app
+
+=== BTManager Installer ===
+
+1. Checking WAF app files...
+   Files at /mnt/us/kindle_hid_passthrough/illusion/BTManager
+2. Setting permissions...
+   Done
+3. Purging stale WAF cache...
+   Done
+4. Registering app...
+   Registered com.lzampier.btmanager in appreg.db
+5. Installing scriptlet...
+   Installed to /mnt/us/documents/BTManager.sh
+6. Starting daemon...
+   Daemon started via upstart
+
+=== Installation Complete ===
+
+You can now:
+  - Open 'BT Manager' from the Kindle library (scriptlet)
+  - Or launch directly: lipc-set-prop com.lab126.appmgrd start app://com.lzampier.btmanager
+
+To start on boot, install the upstart config:
+  cp /mnt/us/kindle_hid_passthrough/illusion/../assets/hid-passthrough.upstart /etc/upstart/hid-passthrough.conf
+
+ -> Installing Button Mapper
+system: I mntroot:def:Making root filesystem writeable
+
+=== MapperManager Installer ===
+
+1. App files at /mnt/us/kindle-button-mapper/illusion/MapperManager
+2. Setting scriptlet permissions
+3. Registering app
+   Already registered
+4. Installing scriptlet
+   Installed at /mnt/us/documents/MapperManager.sh
+
+=== Installation Complete ===
+
+Open 'Button Mapper' (MapperManager.sh) from the Kindle library, or run:
+  lipc-set-prop com.lab126.appmgrd start app://com.lzampier.mappermanager
+
+system: I mntroot:def:Making root filesystem read-only
+kindle-button-mapper start/running, process 17647
+Installed. Open Button Mapper from the Kindle library or via:
+  lipc-set-prop com.lab126.appmgrd start app://com.lzampier.mappermanager
+ -> Ready.
+ -> Installing KOReader plugin into /mnt/us/koreader/plugins
+ -> Ready. Restart KOReader to load it.
+
+Installation complete. Open 'BT Manager' from the Kindle library.
+[root@kindle us]# /sbin/stop hid-passthrough
+hid-passthrough stop/waiting
+[root@kindle us]# pkill -f "ld-linux-armhf" 2>/dev/null
+[root@kindle us]# /sbin/start hid-passthrough
+hid-passthrough start/running, process 17685
+[root@kindle us]# curl -s http://127.0.0.1:8321/status
+{"daemon_running": true, "devices": [{"address": "EA:F5:FD:0F:A4:11", "protocol": "ble", "name": "Free 2"}], "device_count": 1, "scanning": false, "pairing": false, "cursor_running": false, "connections": [], "ok": true, "version": "3.14.1-a38e6e0", "autostart": true}[root@kindle us]# tail -40 /var/log/hid_passthrough.log
+2026-08-21 23:35:05,014 INFO daemon: === Starting connection ===
+2026-08-21 23:35:05,019 INFO ble_hid: Devices: 0 Classic, 1 BLE
+2026-08-21 23:35:05,019 INFO ble_hid: HID Host v3.14.1-a38e6e0
+2026-08-21 23:35:05,020 INFO ble_hid: Opening transport...
+2026-08-21 23:35:05,098 INFO ble_hid: Sending HCI Reset...
+2026-08-21 23:35:05,296 INFO ble_hid: HCI Reset successful
+2026-08-21 23:35:05,818 INFO ble_hid: Device powered on: 00:00:46:67:61:01/P
+2026-08-21 23:35:05,838 INFO ble_hid: Controller address resolution enabled
+2026-08-21 23:35:05,839 INFO ble_hid: BLE enabled
+2026-08-21 23:35:05,852 INFO ble_hid: Keystore has 1 entries
+2026-08-21 23:35:05,858 INFO device_cache: Loaded device cache for EA:F5:FD:0F:A4:11
+2026-08-21 23:35:05,859 INFO ble_hid: Cached descriptor for Free 2 (EA:F5:FD:0F:A4:11)
+2026-08-21 23:35:05,860 INFO ble_hid: Serving devices (Classic: 0, BLE: 1)
+2026-08-21 23:35:05,864 INFO ble_hid: [BLE] Accept-list handler running
+2026-08-21 23:35:37,130 INFO daemon: Shutdown signal received
+2026-08-21 23:35:37,132 INFO daemon: Stopping...
+2026-08-21 23:35:37,136 WARNING ble_hid: lipc-wait-event exited (-15); respawning
+2026-08-21 23:36:09,301 INFO ble_hid: Preparing Bluetooth hardware...
+2026-08-21 23:36:09,303 INFO ble_hid: Detected Kindle PW6 (code 0xC7F)
+2026-08-21 23:36:09,304 INFO ble_hid: BT module already loaded: wmt_cdev_bt.ko
+2026-08-21 23:36:09,361 INFO ble_hid: /dev/stpbt is available
+2026-08-21 23:36:09,400 INFO ble_hid: API server listening on port 8321
+2026-08-21 23:36:09,403 INFO ble_hid: Watching powerd for system suspend
+2026-08-21 23:36:09,407 INFO ble_hid: Kindle HID Passthrough v3.14.1-a38e6e0 (daemon)
+2026-08-21 23:36:09,410 INFO daemon: HID Daemon v3.14.1-a38e6e0
+2026-08-21 23:36:09,414 INFO daemon: Device: Free 2 (EA:F5:FD:0F:A4:11) (ble)
+2026-08-21 23:36:09,414 INFO daemon: === Starting connection ===
+2026-08-21 23:36:09,419 INFO ble_hid: Devices: 0 Classic, 1 BLE
+2026-08-21 23:36:09,419 INFO ble_hid: HID Host v3.14.1-a38e6e0
+2026-08-21 23:36:09,420 INFO ble_hid: Opening transport...
+2026-08-21 23:36:09,498 INFO ble_hid: Sending HCI Reset...
+2026-08-21 23:36:09,662 INFO ble_hid: HCI Reset successful
+2026-08-21 23:36:10,128 INFO ble_hid: Device powered on: 00:00:46:67:61:01/P
+2026-08-21 23:36:10,143 INFO ble_hid: Controller address resolution enabled
+2026-08-21 23:36:10,144 INFO ble_hid: BLE enabled
+2026-08-21 23:36:10,147 INFO ble_hid: Keystore has 1 entries
+2026-08-21 23:36:10,150 INFO device_cache: Loaded device cache for EA:F5:FD:0F:A4:11
+2026-08-21 23:36:10,151 INFO ble_hid: Cached descriptor for Free 2 (EA:F5:FD:0F:A4:11)
+2026-08-21 23:36:10,152 INFO ble_hid: Serving devices (Classic: 0, BLE: 1)
+2026-08-21 23:36:10,153 INFO ble_hid: [BLE] Accept-list handler running
+[root@kindle us]# curl -s http://127.0.0.1:8321/status
+{"daemon_running": true, "devices": [{"address": "EA:F5:FD:0F:A4:11", "protocol": "ble", "name": "Free 2"}], "device_count": 1, "scanning": false, "pairing": false, "cursor_running": false, "connections": [{"address": "EA:F5:FD:0F:A4:11", "protocol": "ble", "name": "Free 2", "hid_ready": true, "uhid_name": "Free 2", "input_paths": ["/dev/input/event3"], "descriptor_size": 220}], "ok": true, "version": "3.14.1-a38e6e0", "autostart": true}[root@kindle us]# tail -40 /var/log/hid_passthrough.log
+2026-08-21 23:37:15,233 INFO ble_hid: HID Host v3.14.1-a38e6e0
+2026-08-21 23:37:15,234 INFO ble_hid: Opening transport...
+2026-08-21 23:37:15,298 INFO ble_hid: Sending HCI Reset...
+2026-08-21 23:37:15,486 INFO ble_hid: HCI Reset successful
+2026-08-21 23:37:15,955 INFO ble_hid: Device powered on: 00:00:46:67:61:01/P
+2026-08-21 23:37:15,970 INFO ble_hid: Controller address resolution enabled
+2026-08-21 23:37:15,971 INFO ble_hid: BLE enabled
+2026-08-21 23:37:15,975 INFO ble_hid: Keystore has 1 entries
+2026-08-21 23:37:15,977 INFO device_cache: Loaded device cache for EA:F5:FD:0F:A4:11
+2026-08-21 23:37:15,978 INFO ble_hid: Cached descriptor for Free 2 (EA:F5:FD:0F:A4:11)
+2026-08-21 23:37:15,979 INFO ble_hid: Serving devices (Classic: 0, BLE: 1)
+2026-08-21 23:37:15,980 INFO ble_hid: [BLE] Accept-list handler running
+2026-08-21 23:37:53,477 INFO ble_hid: [BLE] Device connected: Free 2 (EA:F5:FD:0F:A4:11)
+2026-08-21 23:37:53,488 INFO ble_hid: [BLE] Restoring bonding...
+2026-08-21 23:37:53,626 INFO ble_hid: [BLE] Bonding restored
+2026-08-21 23:37:53,630 INFO device_cache: Loaded device cache for EA:F5:FD:0F:A4:11
+2026-08-21 23:37:53,631 INFO ble_hid: Loaded cached descriptor (220 bytes)
+2026-08-21 23:37:53,773 INFO ble_hid: [BLE] Found HID service
+2026-08-21 23:37:54,184 INFO ble_hid: [BLE] Found input report 1
+2026-08-21 23:37:54,710 INFO ble_hid: [BLE] Found input report 2
+2026-08-21 23:37:54,813 INFO ble_hid: [BLE] Found input report 3
+2026-08-21 23:37:54,918 INFO ble_hid: [BLE] Found input report 4
+2026-08-21 23:37:55,023 INFO ble_hid: [BLE] Found input report 5
+2026-08-21 23:37:55,129 INFO ble_hid: [BLE] Found input report 6
+2026-08-21 23:37:55,131 INFO uhid_handler: Stripped digitizer collection(s) (220 -> 146 bytes)
+2026-08-21 23:37:55,134 INFO uhid_handler: Created UHID device: Free 2 (vendor=0x0000, product=0x0000, rd_size=146)
+2026-08-21 23:37:55,135 INFO ble_hid: UHID device created: Free 2
+2026-08-21 23:37:55,234 INFO ble_hid: [BLE] Subscribed to report 1
+2026-08-21 23:37:55,339 INFO ble_hid: [BLE] Subscribed to report 2
+2026-08-21 23:37:55,445 INFO ble_hid: [BLE] Subscribed to report 3
+2026-08-21 23:37:55,549 INFO ble_hid: [BLE] Subscribed to report 4
+2026-08-21 23:37:55,653 INFO ble_hid: [BLE] Subscribed to report 5
+2026-08-21 23:37:55,759 INFO ble_hid: [BLE] Subscribed to report 6
+2026-08-21 23:37:55,762 INFO ble_hid: [BLE] Wrote Exit Suspend to HID Control Point
+2026-08-21 23:37:55,812 INFO ble_hid: [BLE] Protocol Mode: Report
+2026-08-21 23:37:55,813 INFO ble_hid: [BLE] Free 2 (EA:F5:FD:0F:A4:11) receiving HID reports
+2026-08-21 23:37:56,075 INFO ble_hid: [BLE] No Battery Service on Free 2 (EA:F5:FD:0F:A4:11); services: ['0018', '0f18', '30ae', '1218', '0a18', '00ae']
+2026-08-21 23:37:56,284 INFO ble_hid: [BLE] Subscribed to notify 192a on EA:F5:FD:0F:A4:11
+2026-08-21 23:37:56,494 INFO ble_hid: [BLE] Subscribed to notify 02ae on EA:F5:FD:0F:A4:11
+2026-08-21 23:37:56,914 INFO ble_hid: [BLE] Subscribed to notify 02ae on EA:F5:FD:0F:A4:11
+[root@kindle us]# tail -30 /var/log/hid_passthrough.log
+2026-08-21 23:37:53,488 INFO ble_hid: [BLE] Restoring bonding...
+2026-08-21 23:37:53,626 INFO ble_hid: [BLE] Bonding restored
+2026-08-21 23:37:53,630 INFO device_cache: Loaded device cache for EA:F5:FD:0F:A4:11
+2026-08-21 23:37:53,631 INFO ble_hid: Loaded cached descriptor (220 bytes)
+2026-08-21 23:37:53,773 INFO ble_hid: [BLE] Found HID service
+2026-08-21 23:37:54,184 INFO ble_hid: [BLE] Found input report 1
+2026-08-21 23:37:54,710 INFO ble_hid: [BLE] Found input report 2
+2026-08-21 23:37:54,813 INFO ble_hid: [BLE] Found input report 3
+2026-08-21 23:37:54,918 INFO ble_hid: [BLE] Found input report 4
+2026-08-21 23:37:55,023 INFO ble_hid: [BLE] Found input report 5
+2026-08-21 23:37:55,129 INFO ble_hid: [BLE] Found input report 6
+2026-08-21 23:37:55,131 INFO uhid_handler: Stripped digitizer collection(s) (220 -> 146 bytes)
+2026-08-21 23:37:55,134 INFO uhid_handler: Created UHID device: Free 2 (vendor=0x0000, product=0x0000, rd_size=146)
+2026-08-21 23:37:55,135 INFO ble_hid: UHID device created: Free 2
+2026-08-21 23:37:55,234 INFO ble_hid: [BLE] Subscribed to report 1
+2026-08-21 23:37:55,339 INFO ble_hid: [BLE] Subscribed to report 2
+2026-08-21 23:37:55,445 INFO ble_hid: [BLE] Subscribed to report 3
+2026-08-21 23:37:55,549 INFO ble_hid: [BLE] Subscribed to report 4
+2026-08-21 23:37:55,653 INFO ble_hid: [BLE] Subscribed to report 5
+2026-08-21 23:37:55,759 INFO ble_hid: [BLE] Subscribed to report 6
+2026-08-21 23:37:55,762 INFO ble_hid: [BLE] Wrote Exit Suspend to HID Control Point
+2026-08-21 23:37:55,812 INFO ble_hid: [BLE] Protocol Mode: Report
+2026-08-21 23:37:55,813 INFO ble_hid: [BLE] Free 2 (EA:F5:FD:0F:A4:11) receiving HID reports
+2026-08-21 23:37:56,075 INFO ble_hid: [BLE] No Battery Service on Free 2 (EA:F5:FD:0F:A4:11); services: ['0018', '0f18', '30ae', '1218', '0a18', '00ae']
+2026-08-21 23:37:56,284 INFO ble_hid: [BLE] Subscribed to notify 192a on EA:F5:FD:0F:A4:11
+2026-08-21 23:37:56,494 INFO ble_hid: [BLE] Subscribed to notify 02ae on EA:F5:FD:0F:A4:11
+2026-08-21 23:37:56,914 INFO ble_hid: [BLE] Subscribed to notify 02ae on EA:F5:FD:0F:A4:11
+2026-08-21 23:38:56,976 INFO ble_hid: [BLE] Notify 192a: 5b
+2026-08-21 23:38:56,977 INFO ble_hid: [BLE] Free 2 (EA:F5:FD:0F:A4:11) battery: 91% (notify 192a)
+2026-08-21 23:42:16,138 INFO ble_hid: [BLE] No Battery Service on Free 2 (EA:F5:FD:0F:A4:11); services: ['0018', '0f18', '30ae', '1218', '0a18', '00ae']
+[root@kindle us]# curl -s http://127.0.0.1:8321/status
+{"daemon_running": true, "devices": [{"address": "EA:F5:FD:0F:A4:11", "protocol": "ble", "name": "Free 2"}], "device_count": 1, "scanning": false, "pairing": false, "cursor_running": false, "connections": [{"address": "EA:F5:FD:0F:A4:11", "protocol": "ble", "name": "Free 2", "hid_ready": true, "uhid_name": "Free 2", "input_paths": ["/dev/input/event3"], "descriptor_size": 220, "battery_level": 91, "battery_updated": 1787326736.976716}], "ok": true, "version": "3.14.1-a38e6e0", "autostart": true}[root@kindle us]# ls /sys/class/net/
+ifb0   ifb1   lo     sit0   tunl0  usb0   wlan0
+[root@kindle us]# /mnt/us/usbnetlite/bin/usbnetwork usbms
+wall: can't open 'We're switching back to USB MS, so if you're wondering why your terminal is frozen, go read the docs!': No such file or directory
+[root@kindle us]# Connection to 192.168.0.104 closed by remote host.
+Connection to 192.168.0.104 closed.
+
+C:\Users\AQ\Downloads>ssh root@192.168.0.104
+root@192.168.0.104's password:
+#################################################
+#  N O T I C E  *  N O T I C E  *  N O T I C E  #
+#################################################
+Rootfs is mounted read-only. Invoke mntroot rw to
+switch back to a writable rootfs.
+#################################################
+[root@kindle us]# ls /mnt/us/koreader/plugins/
+SSH.koplugin                 cloudlibrary.koplugin        httpinspector.koplugin       simpleui.koplugin
+archiveviewer.koplugin       cloudstorage.koplugin        japanese.koplugin            statistics.koplugin
+autodim.koplugin             coverbrowser.koplugin        keepalive.koplugin           systemstat.koplugin
+autostandby.koplugin         coverimage.koplugin          kosync.koplugin              terminal.koplugin
+autosuspend.koplugin         docsettingtweak.koplugin     movetoarchive.koplugin       texteditor.koplugin
+autoturn.koplugin            exporter.koplugin            newsdownloader.koplugin      timesync.koplugin
+autowarmth.koplugin          externalkeyboard.koplugin    opds.koplugin                vocabbuilder.koplugin
+batterystat.koplugin         filebrowserplus.koplugin     perceptionexpander.koplugin  wallabag.koplugin
+bookends.koplugin            gestures.koplugin            pinyin_enhancement.koplugin  zlibrary.koplugin
+bookshortcuts.koplugin       hello.koplugin               profiles.koplugin
+btbattery.koplugin           hidpassthrough.koplugin      qrclipboard.koplugin
+calibre.koplugin             hotkeys.koplugin             readtimer.koplugin
+[root@kindle us]# head -8 /mnt/us/koreader/plugins/bookends.koplugin/_meta.lua
+local _ = require("i18n").gettext
+return {
+    name = "bookends",
+    fullname = _("Bookends"),
+    description = _([[Configurable text overlays at screen corners and edges with token expansion and icon support.]]),
+    version = "3.3.1",
+}
+[root@kindle us]# client_loop: send disconnect: Connection reset
+
+C:\Users\AQ\Downloads>ssh root@192.168.0.104
+root@192.168.0.104's password:
+#################################################
+#  N O T I C E  *  N O T I C E  *  N O T I C E  #
+#################################################
+Rootfs is mounted read-only. Invoke mntroot rw to
+switch back to a writable rootfs.
+#################################################
+[root@kindle us]# curl -s http://127.0.0.1:8321/status
+[root@kindle us]# ls /mnt/us/koreader/plugins/ | grep -iE "bookends|btbattery"
+bookends.koplugin
+btbattery.koplugin
+[root@kindle us]# head -8 /mnt/us/koreader/plugins/bookends.koplugin/_meta.lua
+local _ = require("bookends_i18n").gettext
+return {
+    -- KEEP `name`, equal to the .koplugin directory id ("bookends"). Do not
+    -- remove again, even though current KOReader deprecates it (koreader#15096:
+    -- nightly logs a harmless "name in _meta.lua is deprecated" WARN and keys
+    -- enable/disable off the directory id instead).
+    --
+    -- Why it's load-bearing on stable releases (confirmed v2025.10, before the
+[root@kindle us]# head -8 /mnt/us/koreader/plugins/bookends.koplugin/_meta.lua
+local _ = require("bookends_i18n").gettext
+return {
+    -- KEEP `name`, equal to the .koplugin directory id ("bookends"). Do not
+    -- remove again, even though current KOReader deprecates it (koreader#15096:
+    -- nightly logs a harmless "name in _meta.lua is deprecated" WARN and keys
+    -- enable/disable off the directory id instead).
+    --
+    -- Why it's load-bearing on stable releases (confirmed v2025.10, before the
+[root@kindle us]# grep -iE "btbattery|bookends|error" /mnt/us/koreader/crash.log | tail -30
+08/21/26-20:20:50 INFO  bookends i18n: loaded plugins/bookends.koplugin/locale/zh_CN.po — 274 strings
+08/21/26-20:20:50 INFO  bookends i18n: installed for language: zh_CN
+08/21/26-20:20:50 WARN  PluginLoader: bookends name in _meta.lua, is deprecated and will be ignored.
+08/21/26-20:20:51 ERROR failed to register crengine font: cannot register font </mnt/us/fonts/AI楷.ttf>
+08/21/26-20:29:15 INFO  bookends i18n: loaded plugins/bookends.koplugin/locale/zh_CN.po — 274 strings
+08/21/26-20:29:15 INFO  bookends i18n: installed for language: zh_CN
+08/21/26-20:29:15 WARN  PluginLoader: bookends name in _meta.lua, is deprecated and will be ignored.
+08/21/26-20:29:17 ERROR failed to register crengine font: cannot register font </mnt/us/fonts/AI楷.ttf>
+08/21/26-23:50:46 INFO  bookends i18n: loaded plugins/bookends.koplugin/locale/zh_CN.po — 274 strings
+08/21/26-23:50:46 INFO  bookends i18n: installed for language: zh_CN
+08/21/26-23:50:46 WARN  PluginLoader: bookends name in _meta.lua, is deprecated and will be ignored.
+08/21/26-23:50:48 ERROR failed to register crengine font: cannot register font </mnt/us/fonts/AI楷.ttf>
+08/21/26-23:50:59 INFO  bookends i18n: loaded plugins/bookends.koplugin/locale/zh_CN.po — 274 strings
+08/21/26-23:50:59 INFO  bookends i18n: installed for language: zh_CN
+08/21/26-23:50:59 WARN  PluginLoader: bookends name in _meta.lua, is deprecated and will be ignored.
+08/21/26-23:51:00 ERROR failed to register crengine font: cannot register font </mnt/us/fonts/AI楷.ttf>
+08/21/26-23:51:06 INFO  btbattery: battery is now 90%
+08/22/26-00:02:40 INFO  bookends i18n: loaded plugins/bookends.koplugin/locale/zh_CN.po — 567 strings
+08/22/26-00:02:40 INFO  bookends i18n: installed for language: zh_CN
+08/22/26-00:02:40 WARN  PluginLoader: bookends name in _meta.lua, is deprecated and will be ignored.
+08/22/26-00:02:42 ERROR failed to register crengine font: cannot register font </mnt/us/fonts/AI楷.ttf>
+08/22/26-00:02:51 INFO  bookends i18n: loaded plugins/bookends.koplugin/locale/zh_CN.po — 567 strings
+08/22/26-00:02:51 INFO  bookends i18n: installed for language: zh_CN
+08/22/26-00:02:51 WARN  PluginLoader: bookends name in _meta.lua, is deprecated and will be ignored.
+08/22/26-00:02:52 ERROR failed to register crengine font: cannot register font </mnt/us/fonts/AI楷.ttf>
+08/22/26-00:03:01 INFO  bookends: migrated active settings bar_colors → per-bar
+08/22/26-00:11:15 INFO  bookends i18n: loaded plugins/bookends.koplugin/locale/zh_CN.po — 567 strings
+08/22/26-00:11:15 INFO  bookends i18n: installed for language: zh_CN
+08/22/26-00:11:15 WARN  PluginLoader: bookends name in _meta.lua, is deprecated and will be ignored.
+08/22/26-00:11:17 ERROR failed to register crengine font: cannot register font </mnt/us/fonts/AI楷.ttf>
+[root@kindle us]# curl -s http://127.0.0.1:8321/status
+{"daemon_running": true, "devices": [{"address": "EA:F5:FD:0F:A4:11", "protocol": "ble", "name": "Free 2"}], "device_count": 1, "scanning": false, "pairing": false, "cursor_running": false, "connections": [{"address": "EA:F5:FD:0F:A4:11", "protocol": "ble", "name": "Free 2", "hid_ready": true, "uhid_name": "Free 2", "input_paths": ["/dev/input/event2"], "descriptor_size": 220}], "ok": true, "version": "3.14.1-a38e6e0", "autostart": true}[root@kindle us]# client_loop: send disconnect: Connection reset
+
+C:\Users\AQ\Downloads>ssh root@192.168.0.104
+ssh: connect to host 192.168.0.104 port 22: Connection refused
+
+C:\Users\AQ\Downloads>ssh root@192.168.0.104
+ssh: connect to host 192.168.0.104 port 22: Connection refused
+
+C:\Users\AQ\Downloads>ssh root@192.168.0.104
+root@192.168.0.104's password:
+#################################################
+#  N O T I C E  *  N O T I C E  *  N O T I C E  #
+#################################################
+Rootfs is mounted read-only. Invoke mntroot rw to
+switch back to a writable rootfs.
+#################################################
+[root@kindle us]# tail -25 /var/log/hid_passthrough.log
+2026-08-22 00:22:58,211 INFO device_cache: Loaded device cache for EA:F5:FD:0F:A4:11
+2026-08-22 00:22:58,212 INFO ble_hid: Loaded cached descriptor (220 bytes)
+2026-08-22 00:22:58,353 INFO ble_hid: [BLE] Found HID service
+2026-08-22 00:22:58,779 INFO ble_hid: [BLE] Found input report 1
+2026-08-22 00:22:58,989 INFO ble_hid: [BLE] Found input report 2
+2026-08-22 00:22:59,095 INFO ble_hid: [BLE] Found input report 3
+2026-08-22 00:22:59,200 INFO ble_hid: [BLE] Found input report 4
+2026-08-22 00:22:59,304 INFO ble_hid: [BLE] Found input report 5
+2026-08-22 00:22:59,410 INFO ble_hid: [BLE] Found input report 6
+2026-08-22 00:22:59,412 INFO uhid_handler: Stripped digitizer collection(s) (220 -> 146 bytes)
+2026-08-22 00:22:59,418 INFO uhid_handler: Created UHID device: Free 2 (vendor=0x0000, product=0x0000, rd_size=146)
+2026-08-22 00:22:59,419 INFO ble_hid: UHID device created: Free 2
+2026-08-22 00:22:59,514 INFO ble_hid: [BLE] Subscribed to report 1
+2026-08-22 00:22:59,619 INFO ble_hid: [BLE] Subscribed to report 2
+2026-08-22 00:22:59,724 INFO ble_hid: [BLE] Subscribed to report 3
+2026-08-22 00:22:59,829 INFO ble_hid: [BLE] Subscribed to report 4
+2026-08-22 00:22:59,934 INFO ble_hid: [BLE] Subscribed to report 5
+2026-08-22 00:23:00,038 INFO ble_hid: [BLE] Subscribed to report 6
+2026-08-22 00:23:00,042 INFO ble_hid: [BLE] Wrote Exit Suspend to HID Control Point
+2026-08-22 00:23:00,091 INFO ble_hid: [BLE] Protocol Mode: Report
+2026-08-22 00:23:00,104 INFO ble_hid: [BLE] Free 2 (EA:F5:FD:0F:A4:11) receiving HID reports
+2026-08-22 00:23:00,352 INFO ble_hid: [BLE] No Battery Service on Free 2 (EA:F5:FD:0F:A4:11); services: ['0018', '0f18', '30ae', '1218', '0a18', '00ae']
+2026-08-22 00:23:00,564 INFO ble_hid: [BLE] Subscribed to notify 192a on EA:F5:FD:0F:A4:11
+2026-08-22 00:23:00,774 INFO ble_hid: [BLE] Subscribed to notify 02ae on EA:F5:FD:0F:A4:11
+2026-08-22 00:23:01,194 INFO ble_hid: [BLE] Subscribed to notify 02ae on EA:F5:FD:0F:A4:11
+[root@kindle us]# tail -25 /var/log/hid_passthrough.log
+2026-08-22 00:22:58,353 INFO ble_hid: [BLE] Found HID service
+2026-08-22 00:22:58,779 INFO ble_hid: [BLE] Found input report 1
+2026-08-22 00:22:58,989 INFO ble_hid: [BLE] Found input report 2
+2026-08-22 00:22:59,095 INFO ble_hid: [BLE] Found input report 3
+2026-08-22 00:22:59,200 INFO ble_hid: [BLE] Found input report 4
+2026-08-22 00:22:59,304 INFO ble_hid: [BLE] Found input report 5
+2026-08-22 00:22:59,410 INFO ble_hid: [BLE] Found input report 6
+2026-08-22 00:22:59,412 INFO uhid_handler: Stripped digitizer collection(s) (220 -> 146 bytes)
+2026-08-22 00:22:59,418 INFO uhid_handler: Created UHID device: Free 2 (vendor=0x0000, product=0x0000, rd_size=146)
+2026-08-22 00:22:59,419 INFO ble_hid: UHID device created: Free 2
+2026-08-22 00:22:59,514 INFO ble_hid: [BLE] Subscribed to report 1
+2026-08-22 00:22:59,619 INFO ble_hid: [BLE] Subscribed to report 2
+2026-08-22 00:22:59,724 INFO ble_hid: [BLE] Subscribed to report 3
+2026-08-22 00:22:59,829 INFO ble_hid: [BLE] Subscribed to report 4
+2026-08-22 00:22:59,934 INFO ble_hid: [BLE] Subscribed to report 5
+2026-08-22 00:23:00,038 INFO ble_hid: [BLE] Subscribed to report 6
+2026-08-22 00:23:00,042 INFO ble_hid: [BLE] Wrote Exit Suspend to HID Control Point
+2026-08-22 00:23:00,091 INFO ble_hid: [BLE] Protocol Mode: Report
+2026-08-22 00:23:00,104 INFO ble_hid: [BLE] Free 2 (EA:F5:FD:0F:A4:11) receiving HID reports
+2026-08-22 00:23:00,352 INFO ble_hid: [BLE] No Battery Service on Free 2 (EA:F5:FD:0F:A4:11); services: ['0018', '0f18', '30ae', '1218', '0a18', '00ae']
+2026-08-22 00:23:00,564 INFO ble_hid: [BLE] Subscribed to notify 192a on EA:F5:FD:0F:A4:11
+2026-08-22 00:23:00,774 INFO ble_hid: [BLE] Subscribed to notify 02ae on EA:F5:FD:0F:A4:11
+2026-08-22 00:23:01,194 INFO ble_hid: [BLE] Subscribed to notify 02ae on EA:F5:FD:0F:A4:11
+2026-08-22 00:24:01,543 INFO ble_hid: [BLE] Notify 192a: 57
+2026-08-22 00:24:01,544 INFO ble_hid: [BLE] Free 2 (EA:F5:FD:0F:A4:11) battery: 87% (notify 192a)
+[root@kindle us]# curl -s http://127.0.0.1:8321/status
+{"daemon_running": true, "devices": [{"address": "EA:F5:FD:0F:A4:11", "protocol": "ble", "name": "Free 2"}], "device_count": 1, "scanning": false, "pairing": false, "cursor_running": false, "connections": [{"address": "EA:F5:FD:0F:A4:11", "protocol": "ble", "name": "Free 2", "hid_ready": true, "uhid_name": "Free 2", "input_paths": ["/dev/input/event3"], "descriptor_size": 220, "battery_level": 88, "battery_updated": 1787329505.6747282}], "ok": true, "version": "3.14.1-a38e6e0", "autostart": true}[root@kindle us]# tail -25 /var/log/hid_passthrough.log
+2026-08-22 00:22:58,989 INFO ble_hid: [BLE] Found input report 2
+2026-08-22 00:22:59,095 INFO ble_hid: [BLE] Found input report 3
+2026-08-22 00:22:59,200 INFO ble_hid: [BLE] Found input report 4
+2026-08-22 00:22:59,304 INFO ble_hid: [BLE] Found input report 5
+2026-08-22 00:22:59,410 INFO ble_hid: [BLE] Found input report 6
+2026-08-22 00:22:59,412 INFO uhid_handler: Stripped digitizer collection(s) (220 -> 146 bytes)
+2026-08-22 00:22:59,418 INFO uhid_handler: Created UHID device: Free 2 (vendor=0x0000, product=0x0000, rd_size=146)
+2026-08-22 00:22:59,419 INFO ble_hid: UHID device created: Free 2
+2026-08-22 00:22:59,514 INFO ble_hid: [BLE] Subscribed to report 1
+2026-08-22 00:22:59,619 INFO ble_hid: [BLE] Subscribed to report 2
+2026-08-22 00:22:59,724 INFO ble_hid: [BLE] Subscribed to report 3
+2026-08-22 00:22:59,829 INFO ble_hid: [BLE] Subscribed to report 4
+2026-08-22 00:22:59,934 INFO ble_hid: [BLE] Subscribed to report 5
+2026-08-22 00:23:00,038 INFO ble_hid: [BLE] Subscribed to report 6
+2026-08-22 00:23:00,042 INFO ble_hid: [BLE] Wrote Exit Suspend to HID Control Point
+2026-08-22 00:23:00,091 INFO ble_hid: [BLE] Protocol Mode: Report
+2026-08-22 00:23:00,104 INFO ble_hid: [BLE] Free 2 (EA:F5:FD:0F:A4:11) receiving HID reports
+2026-08-22 00:23:00,352 INFO ble_hid: [BLE] No Battery Service on Free 2 (EA:F5:FD:0F:A4:11); services: ['0018', '0f18', '30ae', '1218', '0a18', '00ae']
+2026-08-22 00:23:00,564 INFO ble_hid: [BLE] Subscribed to notify 192a on EA:F5:FD:0F:A4:11
+2026-08-22 00:23:00,774 INFO ble_hid: [BLE] Subscribed to notify 02ae on EA:F5:FD:0F:A4:11
+2026-08-22 00:23:01,194 INFO ble_hid: [BLE] Subscribed to notify 02ae on EA:F5:FD:0F:A4:11
+2026-08-22 00:24:01,543 INFO ble_hid: [BLE] Notify 192a: 57
+2026-08-22 00:24:01,544 INFO ble_hid: [BLE] Free 2 (EA:F5:FD:0F:A4:11) battery: 87% (notify 192a)
+2026-08-22 00:25:05,674 INFO ble_hid: [BLE] Notify 192a: 58
+2026-08-22 00:25:05,675 INFO ble_hid: [BLE] Free 2 (EA:F5:FD:0F:A4:11) battery: 88% (notify 192a)
+[root@kindle us]# killall reader.lua
+killall: reader.lua: no process killed
+[root@kindle us]# grep -i "btbattery" /mnt/us/koreader/crash.log | tail -10
+08/21/26-23:51:06 INFO  btbattery: battery is now 90%
+08/22/26-00:24:44 INFO  btbattery: battery is now 87%
+08/22/26-00:27:35 INFO  btbattery: battery is now 88%
+08/22/26-00:33:49 INFO  btbattery: polled, no battery data yet
+[root@kindle us]# grep -i "btbattery" /mnt/us/koreader/crash.log | tail -10
+08/21/26-23:51:06 INFO  btbattery: battery is now 90%
+08/22/26-00:24:44 INFO  btbattery: battery is now 87%
+08/22/26-00:27:35 INFO  btbattery: battery is now 88%
+08/22/26-00:33:49 INFO  btbattery: polled, no battery data yet
+[root@kindle us]# curl -s http://127.0.0.1:8321/status
+{"daemon_running": true, "devices": [{"address": "EA:F5:FD:0F:A4:11", "protocol": "ble", "name": "Free 2"}], "device_count": 1, "scanning": false, "pairing": false, "cursor_running": false, "connections": [{"address": "EA:F5:FD:0F:A4:11", "protocol": "ble", "name": "Free 2", "hid_ready": true, "uhid_name": "Free 2", "input_paths": ["/dev/input/event3"], "descriptor_size": 220, "battery_level": 87, "battery_updated": 1787330170.99141}], "ok": true, "version": "3.14.1-a38e6e0",[root@kindle us]# grep -i "btbattery" /mnt/us/koreader/crash.log | tail -10
+08/21/26-23:51:06 INFO  btbattery: battery is now 90%
+08/22/26-00:24:44 INFO  btbattery: battery is now 87%
+08/22/26-00:27:35 INFO  btbattery: battery is now 88%
+08/22/26-00:33:49 INFO  btbattery: polled, no battery data yet
+[root@kindle us]# curl -s http://127.0.0.1:8321/status
+{"daemon_running": true, "devices": [{"address": "EA:F5:FD:0F:A4:11", "protocol": "ble", "name": "Free 2"}], "device_count": 1, "scanning": false, "pairing": false, "cursor_running": false, "connections": [{"address": "EA:F5:FD:0F:A4:11", "protocol": "ble", "name": "Free 2", "hid_ready": true, "uhid_name": "Free 2", "input_paths": ["/dev/input/event3"], "descriptor_size": 220, "battery_level": 87, "battery_updated": 1787330170.99141}], "ok": true, "version": "3.14.1-a38e6e0", "autostart": true}[root@kindle us]# grep -i "btbattery" /mnt/us/koreader/crash.log | tail -10
+08/21/26-23:51:06 INFO  btbattery: battery is now 90%
+08/22/26-00:24:44 INFO  btbattery: battery is now 87%
+08/22/26-00:27:35 INFO  btbattery: battery is now 88%
+08/22/26-00:33:49 INFO  btbattery: polled, no battery data yet
+08/22/26-00:45:52 INFO  btbattery: footer not available yet
+08/22/26-00:45:52 INFO  btbattery: footer not available yet
+08/22/26-00:45:52 INFO  btbattery: battery is now 87%
+[root@kindle us]# grep -i "btbattery" /mnt/us/koreader/crash.log | tail -10
+08/21/26-23:51:06 INFO  btbattery: battery is now 90%
+08/22/26-00:24:44 INFO  btbattery: battery is now 87%
+08/22/26-00:27:35 INFO  btbattery: battery is now 88%
+08/22/26-00:33:49 INFO  btbattery: polled, no battery data yet
+08/22/26-00:45:52 INFO  btbattery: footer not available yet
+08/22/26-00:45:52 INFO  btbattery: footer not available yet
+08/22/26-00:45:52 INFO  btbattery: battery is now 87%
+[root@kindle us]# grep -i "btbattery" /mnt/us/koreader/crash.log | tail -10
+08/21/26-23:51:06 INFO  btbattery: battery is now 90%
+08/22/26-00:24:44 INFO  btbattery: battery is now 87%
+08/22/26-00:27:35 INFO  btbattery: battery is now 88%
+08/22/26-00:33:49 INFO  btbattery: polled, no battery data yet
+08/22/26-00:45:52 INFO  btbattery: footer not available yet
+08/22/26-00:45:52 INFO  btbattery: footer not available yet
+08/22/26-00:45:52 INFO  btbattery: battery is now 87%
+[root@kindle us]# grep -i "btbattery" /mnt/us/koreader/crash.log | tail -10
+08/21/26-23:51:06 INFO  btbattery: battery is now 90%
+08/22/26-00:24:44 INFO  btbattery: battery is now 87%
+08/22/26-00:27:35 INFO  btbattery: battery is now 88%
+08/22/26-00:33:49 INFO  btbattery: polled, no battery data yet
+08/22/26-00:45:52 INFO  btbattery: footer not available yet
+08/22/26-00:45:52 INFO  btbattery: footer not available yet
+08/22/26-00:45:52 INFO  btbattery: battery is now 87%
+08/22/26-00:48:33 INFO  btbattery: footer not available yet
+08/22/26-00:48:33 INFO  btbattery: footer not available yet
+08/22/26-00:48:33 INFO  btbattery: battery is now 86%
+[root@kindle us]# cat /mnt/us/koreader/git-rev 2>/dev/null
+v2026.07.1
+[root@kindle us]# cat /mnt/us/koreader/koreader/git-rev 2>/dev/null
+[root@kindle us]# ls /mnt/us/koreader/ | head
+COPYING
+README.md
+books
+cache
+clipboard
+cloudlibrary_sync_log.txt
+common
+crash.log
+data
+datastorage.lua
+[root@kindle us]# grep -i "btbattery" /mnt/us/koreader/crash.log | tail -10
+08/22/26-00:33:49 INFO  btbattery: polled, no battery data yet
+08/22/26-00:45:52 INFO  btbattery: footer not available yet
+08/22/26-00:45:52 INFO  btbattery: footer not available yet
+08/22/26-00:45:52 INFO  btbattery: battery is now 87%
+08/22/26-00:48:33 INFO  btbattery: footer not available yet
+08/22/26-00:48:33 INFO  btbattery: footer not available yet
+08/22/26-00:48:33 INFO  btbattery: battery is now 86%
+08/22/26-00:52:10 INFO  btbattery: footer not found (ui.view=nil, view.footer=nil, ui.footer=nil)
+08/22/26-00:52:10 INFO  btbattery: footer not found (ui.view=nil, view.footer=nil, ui.footer=nil)
+08/22/26-00:52:10 INFO  btbattery: battery is now 86%
+[root@kindle us]# grep -i "btbattery" /mnt/us/koreader/crash.log | tail -10
+08/22/26-00:48:33 INFO  btbattery: footer not available yet
+08/22/26-00:48:33 INFO  btbattery: battery is now 86%
+08/22/26-00:52:10 INFO  btbattery: footer not found (ui.view=nil, view.footer=nil, ui.footer=nil)
+08/22/26-00:52:10 INFO  btbattery: footer not found (ui.view=nil, view.footer=nil, ui.footer=nil)
+08/22/26-00:52:10 INFO  btbattery: battery is now 86%
+08/22/26-00:55:47 INFO  btbattery: footer callback registered
+08/22/26-00:55:47 INFO  btbattery: battery is now 86%
+08/22/26-00:59:21 INFO  btbattery: footer callback registered
+08/22/26-01:02:20 INFO  btbattery: footer callback registered
+08/22/26-01:02:20 INFO  btbattery: battery is now 86%
+[root@kindle us]# grep -i "btbattery" /mnt/us/koreader/crash.log | tail -10
+08/22/26-00:48:33 INFO  btbattery: footer not available yet
+08/22/26-00:48:33 INFO  btbattery: battery is now 86%
+08/22/26-00:52:10 INFO  btbattery: footer not found (ui.view=nil, view.footer=nil, ui.footer=nil)
+08/22/26-00:52:10 INFO  btbattery: footer not found (ui.view=nil, view.footer=nil, ui.footer=nil)
+08/22/26-00:52:10 INFO  btbattery: battery is now 86%
+08/22/26-00:55:47 INFO  btbattery: footer callback registered
+08/22/26-00:55:47 INFO  btbattery: battery is now 86%
+08/22/26-00:59:21 INFO  btbattery: footer callback registered
+08/22/26-01:02:20 INFO  btbattery: footer callback registered
+08/22/26-01:02:20 INFO  btbattery: battery is now 86%
+[root@kindle us]# grep -i "btbattery" /mnt/us/koreader/crash.log | tail -10
+08/22/26-00:48:33 INFO  btbattery: footer not available yet
+08/22/26-00:48:33 INFO  btbattery: battery is now 86%
+08/22/26-00:52:10 INFO  btbattery: footer not found (ui.view=nil, view.footer=nil, ui.footer=nil)
+08/22/26-00:52:10 INFO  btbattery: footer not found (ui.view=nil, view.footer=nil, ui.footer=nil)
+08/22/26-00:52:10 INFO  btbattery: battery is now 86%
+08/22/26-00:55:47 INFO  btbattery: footer callback registered
+08/22/26-00:55:47 INFO  btbattery: battery is now 86%
+08/22/26-00:59:21 INFO  btbattery: footer callback registered
+08/22/26-01:02:20 INFO  btbattery: footer callback registered
+08/22/26-01:02:20 INFO  btbattery: battery is now 86%
+[root@kindle us]# grep -i "btbattery" /mnt/us/koreader/crash.log | tail -10
+08/22/26-00:48:33 INFO  btbattery: footer not available yet
+08/22/26-00:48:33 INFO  btbattery: battery is now 86%
+08/22/26-00:52:10 INFO  btbattery: footer not found (ui.view=nil, view.footer=nil, ui.footer=nil)
+08/22/26-00:52:10 INFO  btbattery: footer not found (ui.view=nil, view.footer=nil, ui.footer=nil)
+08/22/26-00:52:10 INFO  btbattery: battery is now 86%
+08/22/26-00:55:47 INFO  btbattery: footer callback registered
+08/22/26-00:55:47 INFO  btbattery: battery is now 86%
+08/22/26-00:59:21 INFO  btbattery: footer callback registered
+08/22/26-01:02:20 INFO  btbattery: footer callback registered
+08/22/26-01:02:20 INFO  btbattery: battery is now 86%
+[root@kindle us]#

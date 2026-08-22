@@ -46,6 +46,18 @@ def uuid_str(uuid) -> str:
     return bytes(uuid).hex()
 
 
+def uuid_bytes(uuid) -> bytes:
+    """Normalize a Bumble UUID to little-endian bytes for equality checks.
+
+    Bumble exposes 16-bit UUIDs as little-endian bytes, but the object is
+    not a plain `bytes` and its `__eq__` does not accept bytes operands, so
+    direct `uuid == b'...'` comparisons fail. Normalize first instead.
+    """
+    if isinstance(uuid, int):
+        return uuid.to_bytes(2, "little")
+    return bytes(uuid)
+
+
 class BLEMixin:
     """BLE methods for HIDHost."""
 
@@ -171,7 +183,8 @@ class BLEMixin:
             # only after the HID connection is up.
             await peer.discover_services()
             battery_service = next(
-                (s for s in peer.services if s.uuid == GATT_BATTERY_SERVICE), None)
+                (s for s in peer.services if uuid_bytes(s.uuid) == GATT_BATTERY_SERVICE),
+                None)
             if battery_service is None:
                 log.info(
                     f"[BLE] No Battery Service on {self._format_device(session.address)}; "
@@ -180,7 +193,7 @@ class BLEMixin:
             if not battery_service.characteristics:
                 await peer.discover_characteristics(service=battery_service)
             for char in battery_service.characteristics:
-                if char.uuid != GATT_BATTERY_LEVEL_CHARACTERISTIC:
+                if uuid_bytes(char.uuid) != GATT_BATTERY_LEVEL_CHARACTERISTIC:
                     continue
                 # Subscribe to battery notifications first, then read once.
                 try:
@@ -230,7 +243,7 @@ class BLEMixin:
                         log.debug(f"[BLE] Char discovery failed for {uuid_str(service.uuid)}: {e}")
                         continue
                 for char in service.characteristics:
-                    if char.uuid == GATT_BATTERY_LEVEL_CHARACTERISTIC:
+                    if uuid_bytes(char.uuid) == GATT_BATTERY_LEVEL_CHARACTERISTIC:
                         continue  # handled by _read_ble_battery
                     properties = getattr(char, 'properties', 0) or 0
                     if properties & 0x10:  # notify

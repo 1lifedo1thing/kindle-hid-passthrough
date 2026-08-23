@@ -83,8 +83,8 @@ jobs:
           platforms: linux/arm/v7
           tags: kindle-hid-passthrough-builder
           load: true
-          cache-from: type=registry,ref=ghcr.io/zampierilucas/kindle-hid-passthrough-buildcache
-          cache-to: ${{ github.ref == 'refs/heads/main' && 'type=registry,ref=ghcr.io/zampierilucas/kindle-hid-passthrough-buildcache,mode=max' || '' }}
+          cache-from: type=registry,ref=ghcr.io/1lifedo1thing/kindle-hid-passthrough-buildcache
+          cache-to: ${{ github.ref == 'refs/heads/main' && 'type=registry,ref=ghcr.io/1lifedo1thing/kindle-hid-passthrough-buildcache,mode=max' || '' }}
 
       - name: Extract binaries
         run: |

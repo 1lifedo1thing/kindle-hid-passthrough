@@ -5,6 +5,21 @@ MAPPER_DIR="/mnt/us/kindle-button-mapper"
 APP_ID="com.lzampier.btmanager"
 APPREG_DB="/var/local/appreg.db"
 SCRIPTLET_DEST="/mnt/us/documents/BTManager.sh"
+KUAL_DIR="/mnt/us/extensions/kindle-hid-passthrough"
+KUAL_LOG="/tmp/kindle-hid-kual.log"
+FBINK="/mnt/us/koreader/fbink"
+
+MENU="installAll|Install or update everything (recommended)|yes
+pairDevice|Pair Bluetooth keyboard|no
+listDevices|List paired devices|no
+installUdevRules|Install udev rules (keyboard service)|yes
+installUpstart|Install upstart (auto-start on boot)|yes
+installWAFApp|Install BTManager app|yes
+installKOReaderPlugin|Install KOReader plugin|yes
+installButtonMapper|Install Button Mapper (gamepad mapping)|yes
+installKUAL|Install KUAL menu entry|no
+uninstallAll|Uninstall everything|yes
+removeUpstart|Disable auto-start on boot (remove upstart)|yes"
 
 SRC_DIR=$(cd "$(dirname "$0")/.." && pwd)
 
@@ -15,7 +30,7 @@ SRC_DIR=$(cd "$(dirname "$0")/.." && pwd)
 SAME_DIR=0
 SENTINEL=".khp-install-probe.$$"
 mkdir -p "$INSTALL_DIR" 2>/dev/null
-if : > "$INSTALL_DIR/$SENTINEL" 2>/dev/null; then
+if [ -d "$INSTALL_DIR" ] && true > "$INSTALL_DIR/$SENTINEL" 2>/dev/null; then
   [ -e "$SRC_DIR/$SENTINEL" ] && SAME_DIR=1
   rm -f "$INSTALL_DIR/$SENTINEL"
 fi
@@ -96,6 +111,7 @@ installMainFiles()
   if in_install_dir; then
     removeStaleFiles
     chmod +x "$INSTALL_DIR/kindle-hid-passthrough"
+    echo " -> Running from the install directory, program files left as they are."
     echo " -> Ready."
     return 0
   fi
@@ -154,6 +170,7 @@ installAll()
     installUpstart
   fi
   installWAFApp
+  installKUAL
   installButtonMapper
   if ! installKOReaderPlugin; then
     startDaemon
@@ -173,6 +190,61 @@ installUdevRules()
   cp "$SRC_DIR/assets/99-hid-keyboard.rules" /etc/udev/rules.d
   /usr/sbin/udevadm control --reload-rules
   /usr/sbin/mntroot ro
+  echo " -> Ready."
+}
+
+screenAlert()
+{
+  title=$(printf '%s' "$1" | sed 's/"/\\"/g')
+  text=$(printf '%s' "$2" | sed 's/"/\\"/g')
+  lipc-set-prop com.lab126.pillow pillowAlert "{ \"clientParams\":{ \"alertId\":\"appAlert1\", \"show\":true, \"customStrings\":[ { \"matchStr\":\"alertTitle\", \"replaceStr\":\"$title\" }, { \"matchStr\":\"alertText\", \"replaceStr\":\"$text\" } ] } }" 2>/dev/null
+}
+
+kualRun()
+{
+  [ -x "$FBINK" ] && "$FBINK" -q -c >/dev/null 2>&1
+  "$1" 2>&1 | tee "$KUAL_LOG" | {
+    row=2
+    while IFS= read -r line; do
+      [ -x "$FBINK" ] || continue
+      [ "$row" -gt 55 ] && { "$FBINK" -q -c >/dev/null 2>&1; row=2; }
+      "$FBINK" -q -y "$row" "$line" >/dev/null 2>&1
+      row=$((row + 1))
+    done
+  }
+  screenAlert "HID Passthrough" "$(tail -n 1 "$KUAL_LOG")"
+}
+
+kualMenu()
+{
+  printf '{"items":[{"name":"Bluetooth HID passthrough","priority":0,"items":['
+  printf '{"name":"Start daemon","priority":1,'
+  printf '"action":"%s/scripts/hid-passthrough-daemon.sh","params":"start"},' "$INSTALL_DIR"
+  printf '{"name":"Stop daemon","priority":2,'
+  printf '"action":"%s/scripts/hid-passthrough-daemon.sh","params":"stop"},' "$INSTALL_DIR"
+  printf '{"name":"Install","priority":3,"items":['
+  echo "$MENU" | while IFS='|' read -r action label in_kual; do
+    [ "$in_kual" = yes ] || continue
+    priority=$((priority + 1))
+    printf '%s{"name":"%s","priority":%d,"action":"%s/scripts/install.sh",' \
+      "$separator" "$label" "$priority" "$INSTALL_DIR"
+    printf '"params":"kualRun %s","exitmenu":false,"internal":"status %s . . ."}' \
+      "$action" "$label"
+    separator=","
+  done
+  printf ']}]}]}\n'
+}
+
+installKUAL()
+{
+  if [ ! -d /mnt/us/extensions ]; then
+    echo " -> KUAL not found, skipping menu entry"
+    return 0
+  fi
+  echo " -> Installing KUAL menu entry"
+  mkdir -p "$KUAL_DIR"
+  cp "$SRC_DIR/assets/config.xml" "$KUAL_DIR/"
+  kualMenu > "$KUAL_DIR/menu.json"
   echo " -> Ready."
 }
 
@@ -253,11 +325,13 @@ installKOReaderPlugin()
     return 0
   }
   SRC_PLUGIN="$SRC_DIR/koreader-plugin/hidpassthrough.koplugin"
-  if [ ! -f "$SRC_PLUGIN/main.lua" ]; then
-    echo "ERROR: plugin source not found at $SRC_PLUGIN" >&2
-    echo "       Run this script from the extracted release, not a partial copy." >&2
-    return 1
-  fi
+  for f in main.lua _meta.lua event_map_extra.lua mapper.lua koreader_actions.lua; do
+    if [ ! -f "$SRC_PLUGIN/$f" ]; then
+      echo "ERROR: $f is missing from $SRC_PLUGIN" >&2
+      echo "       Run this script from the extracted release, not a partial copy." >&2
+      return 1
+    fi
+  done
 
   echo " -> Installing KOReader plugin into $PLUGINS_DIR"
   DEST="$PLUGINS_DIR/hidpassthrough.koplugin"
@@ -266,13 +340,6 @@ installKOReaderPlugin()
     echo "ERROR: failed to copy the plugin to $DEST" >&2
     return 1
   fi
-
-  for f in main.lua _meta.lua event_map_extra.lua mapper.lua koreader_actions.lua; do
-    if [ ! -f "$DEST/$f" ]; then
-      echo "ERROR: $f is missing from $DEST" >&2
-      return 1
-    fi
-  done
   echo " -> Ready. Restart KOReader to load it."
 }
 
@@ -337,6 +404,9 @@ EOF
     rm -rf "$PLUGINS_DIR/hidpassthrough.koplugin"
   fi
 
+  echo " -> Removing KUAL menu entry"
+  rm -rf "$KUAL_DIR"
+
   echo " -> Removing install directory $INSTALL_DIR"
   cd /tmp
   rm -rf "$INSTALL_DIR"
@@ -362,80 +432,54 @@ uninstallButtonMapper()
   return 0
 }
 
+menu_count()
+{
+  echo "$MENU" | wc -l
+}
+
 print_menu()
 {
   printf "\nSelect an option:\n"
-  printf " 1) Install or update everything (recommended)\n"
-  printf " 2) Pair Bluetooth keyboard\n"
-  printf " 3) List paired devices\n"
-  printf " 4) Install udev rules (keyboard service)\n"
-  printf " 5) Install upstart (auto-start on boot)\n"
-  printf " 6) Install BTManager app\n"
-  printf " 7) Install KOReader plugin\n"
-  printf " 8) Install Button Mapper (gamepad mapping)\n"
-  printf " 9) Uninstall everything\n"
-  printf "10) Disable auto-start on boot (remove upstart)\n"
-  printf "11) Quit\n"
+  i=0
+  echo "$MENU" | while IFS='|' read -r action label kual; do
+    i=$((i + 1))
+    printf "%2d) %s\n" "$i" "$label"
+  done
+  printf "%2d) Quit\n" "$(($(menu_count) + 1))"
 }
 
 # Non-interactive entry point: `sh install.sh <action>` runs one action and exits.
 if [ $# -gt 0 ]; then
   case "$1" in
-    installAll|update)  installAll; exit $? ;;
-    installUdevRules)   installUdevRules; exit $? ;;
-    installUpstart)     installUpstart; exit $? ;;
-    removeUpstart)      removeUpstart; exit $? ;;
-    installMainFiles)   installMainFiles; exit $? ;;
-    installWAFApp)      installWAFApp; exit $? ;;
-    installKOReaderPlugin) installKOReaderPlugin; exit $? ;;
-    installButtonMapper) installButtonMapper; exit $? ;;
-    uninstallButtonMapper) uninstallButtonMapper; exit $? ;;
-    uninstallAll)       uninstallAll; exit $? ;;
+    update) installAll; exit $? ;;
+    kualRun)
+      echo "$MENU" | cut -d'|' -f1 | grep -qx "$2" || { echo "Unknown action: $2" >&2; exit 1; }
+      kualRun "$2"; exit $? ;;
+    installAll|installUdevRules|installUpstart|removeUpstart|installMainFiles| \
+    installWAFApp|installKUAL|installKOReaderPlugin|installButtonMapper| \
+    uninstallButtonMapper|uninstallAll|kualMenu)
+      "$1"; exit $? ;;
     *) echo "Unknown action: $1" >&2; exit 1 ;;
   esac
 fi
 
 while :; do
   print_menu
-  printf "Enter choice [1-11]: "
-  read choice
+  count=$(menu_count)
+  printf "Enter choice [1-%d]: " "$((count + 1))"
+  read choice || break
   case "$choice" in
-    1)
-      installAll
-      ;;
-    2)
-      pairDevice
-      ;;
-    3)
-      listDevices
-      ;;
-    4)
-      installUdevRules
-      ;;
-    5)
-      installUpstart
-      ;;
-    6)
-      installWAFApp
-      ;;
-    7)
-      installKOReaderPlugin
-      ;;
-    8)
-      installButtonMapper
-      ;;
-    9)
-      uninstallAll
-      ;;
-    10)
-      removeUpstart
-      ;;
-    11)
-      echo "Exiting."
-      break
-      ;;
-    *)
+    ''|*[!0-9]*)
       printf "Invalid option: %s\n" "$choice"
+      continue
       ;;
   esac
+  if [ "$choice" -ge 1 ] && [ "$choice" -le "$count" ]; then
+    "$(echo "$MENU" | sed -n "${choice}p" | cut -d'|' -f1)"
+  elif [ "$choice" -eq "$((count + 1))" ]; then
+    echo "Exiting."
+    break
+  else
+    printf "Invalid option: %s\n" "$choice"
+  fi
 done

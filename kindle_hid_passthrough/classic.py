@@ -14,7 +14,7 @@ from bumble.l2cap import ClassicChannelSpec
 from bumble.sdp import Client as SDPClient
 
 from config import Protocol, config, normalize_addr, clean_device_name
-from logging_utils import log
+from logging_utils import errstr, log
 
 FALLBACK_HID_DESCRIPTOR = bytes([
     0x05, 0x01, 0x09, 0x05, 0xa1, 0x01, 0x85, 0x01,
@@ -189,7 +189,7 @@ class ClassicMixin:
                 await asyncio.wait_for(connection.switch_role(Role.CENTRAL), timeout=5.0)
                 log.success("[Classic] Role switch complete, now central")
             except Exception as e:
-                log.warning(f"[Classic] Role switch failed: {e!r}")
+                log.warning(f"[Classic] Role switch failed: {errstr(e)}")
 
         if not connection.is_encrypted:
             log.info("[Classic] Restoring bonding (authenticate + encrypt)...")
@@ -198,7 +198,7 @@ class ClassicMixin:
                 await asyncio.wait_for(connection.encrypt(enable=True), timeout=5.0)
                 log.success("[Classic] Bonding restored")
             except Exception as e:
-                log.warning(f"[Classic] Bonding restore failed: {e!r}")
+                log.warning(f"[Classic] Bonding restore failed: {errstr(e)}")
 
         channels = session.channels
 
@@ -208,7 +208,7 @@ class ClassicMixin:
                 await asyncio.wait_for(channels.connect_control_channel(), timeout=5.0)
                 log.success("[Classic] HID control channel connected")
             except Exception as e:
-                log.warning(f"[Classic] Control channel: {e!r}")
+                log.warning(f"[Classic] Control channel: {errstr(e)}")
 
         if not channels.intr_channel:
             log.info("[Classic] Connecting to HID interrupt channel...")
@@ -216,7 +216,7 @@ class ClassicMixin:
                 await asyncio.wait_for(channels.connect_interrupt_channel(), timeout=5.0)
                 log.success("[Classic] HID interrupt channel connected")
             except Exception as e:
-                log.warning(f"[Classic] Interrupt channel: {e!r}")
+                log.warning(f"[Classic] Interrupt channel: {errstr(e)}")
 
         if not channels.intr_channel:
             raise InvalidStateError("[Classic] HID channels not opened by peer")
@@ -412,7 +412,7 @@ class ClassicMixin:
                 await asyncio.wait_for(connection.authenticate(), timeout=30.0)
                 log.success("[Classic] Authentication complete")
             except Exception as e:
-                log.warning(f"[Classic] Authentication: {e!r}")
+                log.warning(f"[Classic] Authentication: {errstr(e)}")
 
             log.info("[Classic] Waiting for link key...")
             try:
@@ -429,7 +429,7 @@ class ClassicMixin:
                         timeout=10.0
                     )
                 except Exception as e:
-                    log.warning(f"[Classic] Encryption: {e!r}")
+                    log.warning(f"[Classic] Encryption: {errstr(e)}")
 
             await self._query_classic_sdp(session)
 
@@ -507,14 +507,14 @@ class ClassicMixin:
             await asyncio.wait_for(channels.connect_control_channel(), timeout=5.0)
             log.success("[Classic] HID control channel connected")
         except Exception as e:
-            log.warning(f"[Classic] Control channel: {e!r}")
+            log.warning(f"[Classic] Control channel: {errstr(e)}")
 
         log.info("[Classic] Connecting to HID interrupt channel...")
         try:
             await asyncio.wait_for(channels.connect_interrupt_channel(), timeout=5.0)
             log.success("[Classic] HID interrupt channel connected")
         except Exception as e:
-            log.warning(f"[Classic] Interrupt channel: {e!r}")
+            log.warning(f"[Classic] Interrupt channel: {errstr(e)}")
 
         if not channels.intr_channel:
             log.error("[Classic] Failed to connect HID interrupt channel")

@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 
 from bumble.core import InvalidStateError
-from bumble.hci import HCI_LE_SET_PRIVACY_MODE_COMMAND, HCI_LE_Set_Privacy_Mode_Command, HCI_Write_Class_Of_Device_Command, HCI_Write_Local_Name_Command
+from bumble.hci import HCI_Constant, HCI_LE_SET_PRIVACY_MODE_COMMAND, HCI_LE_Set_Privacy_Mode_Command, HCI_Write_Class_Of_Device_Command, HCI_Write_Local_Name_Command
 
 from ble import BLEMixin
 from bt_setup import ensure_uhid
@@ -17,7 +17,7 @@ from device_cache import DeviceCache
 from logging_utils import log
 from pairing import create_keystore, create_pairing_config
 from transport import create_bumble_device
-from uhid_handler import Bus, UHIDDevice, descriptor_is_pointer, strip_digitizer_collections
+from uhid_handler import Bus, UHIDDevice, descriptor_is_pointer, sanitize_digitizer
 
 __all__ = ['HIDHost']
 
@@ -53,6 +53,7 @@ class DeviceSession:
         self.vc_unplug = False
         self.battery_level: Optional[int] = None
         self.battery_updated: Optional[float] = None
+        self.battery_char = None
 
     def is_alive(self) -> bool:
         conn = self.connection
@@ -383,7 +384,8 @@ class HIDHost(ClassicMixin, BLEMixin):
 
     def _on_session_disconnection(self, session: DeviceSession, reason):
         proto = session.protocol.value.upper()
-        log.warning(f"[{proto}] Device disconnected: {session.address} (reason={reason})")
+        log.warning(f"[{proto}] Device disconnected: {session.address} "
+                    f"(reason={reason} {HCI_Constant.error_name(reason)})")
 
         if reason == 5 and session.protocol == Protocol.CLASSIC:
             log.info("[Classic] Authentication failure - will clear stale key and retry")
@@ -531,7 +533,7 @@ class HIDHost(ClassicMixin, BLEMixin):
 
         try:
             name = self._configured_name(session.address) or session.name or "HID Device"
-            descriptor = strip_digitizer_collections(session.report_map)
+            descriptor = sanitize_digitizer(session.report_map)
             session.uhid_device = UHIDDevice(
                 name=name,
                 report_descriptor=descriptor,

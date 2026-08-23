@@ -116,6 +116,10 @@ It also maps keys. Press a button, a D-pad direction or a trigger and bind it to
 
 For most people this is all you need, and it's the simpler half of the note at the top of this README. Auto-installed via the interactive installer when `/mnt/us/koreader/plugins/` exists. Requires KOReader 2026.07 or newer, which handles keyboard hot-plug natively. See [`koreader-plugin/README.md`](koreader-plugin/README.md) for details.
 
+### KUAL
+
+If `/mnt/us/extensions/` exists you also get a KUAL entry with the installer options in it, so you can reinstall the plugin without SSH.
+
 ## Usage
 
 ### Pairing a device

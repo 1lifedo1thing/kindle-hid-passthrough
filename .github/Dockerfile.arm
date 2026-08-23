@@ -52,8 +52,8 @@ COPY kindle_hid_passthrough/BUILD_SHA /build/kindle_hid_passthrough/
 COPY kindle_hid_passthrough/modules/ /build/kindle_hid_passthrough/modules/
 
 # ARM-specific compiler flags to fix branch range errors
-ENV CFLAGS="-O3 -mword-relocations -mlong-calls -ffunction-sections -fdata-sections"
-ENV LDFLAGS="-Wl,--gc-sections"
+ENV CFLAGS="-O3 -fno-schedule-insns -mword-relocations -mlong-calls -ffunction-sections -fdata-sections"
+ENV LDFLAGS="-fno-schedule-insns -Wl,--gc-sections"
 
 # Build syscall wrapper for Kindle kernel compatibility
 # Kindle kernel 4.9.77 lacks preadv2/pwritev2 (added in 4.16)
@@ -82,7 +82,6 @@ RUN --mount=type=cache,target=/nuitka-cache \
     --lto=yes \
     --show-progress \
     --output-dir=/build/nuitka-out \
-    --include-package=kindle_hid_passthrough \
     --include-data-file=kindle_hid_passthrough/config.ini=kindle_hid_passthrough/config.ini \
     --include-data-file=kindle_hid_passthrough/BUILD_SHA=kindle_hid_passthrough/BUILD_SHA \
     --include-data-dir=kindle_hid_passthrough/modules=kindle_hid_passthrough/modules \
@@ -92,6 +91,21 @@ RUN --mount=type=cache,target=/nuitka-cache \
     --nofollow-import-to=grpc \
     --nofollow-import-to=google \
     --nofollow-import-to=usb \
+    --nofollow-import-to=bumble.transport.usb \
+    --nofollow-import-to=bumble.transport.pyusb \
+    --nofollow-import-to=bumble.transport.android_emulator \
+    --nofollow-import-to=bumble.transport.android_netsim \
+    --nofollow-import-to=bumble.transport.grpc_protobuf \
+    --nofollow-import-to=bumble.transport.ws_client \
+    --nofollow-import-to=bumble.transport.ws_server \
+    --nofollow-import-to=bumble.transport.tcp_client \
+    --nofollow-import-to=bumble.transport.tcp_server \
+    --nofollow-import-to=bumble.transport.udp \
+    --nofollow-import-to=bumble.transport.unix \
+    --nofollow-import-to=bumble.transport.vhci \
+    --nofollow-import-to=bumble.transport.hci_socket \
+    --nofollow-import-to=bumble.transport.pty \
+    --nofollow-import-to=platformdirs \
     kindle_hid_passthrough/main.py
 
 # Copy the build container's dynamic linker and core glibc libs into the dist.

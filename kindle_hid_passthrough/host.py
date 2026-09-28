@@ -31,7 +31,7 @@ from logging_utils import errstr, log
 from media_remote import MEDIA_REMOTE_COD, MediaRemote
 from pairing import create_keystore, create_pairing_config
 from transport import create_bumble_device
-from uhid_handler import Bus, UHIDDevice, descriptor_is_pointer, sanitize_digitizer
+from uhid_handler import Bus, UHIDDevice, descriptor_has_relative_input, descriptor_is_pointer, sanitize_digitizer
 
 __all__ = ['HIDHost']
 
@@ -82,6 +82,7 @@ class DeviceSession:
         self.output_reports = {}
         self.uhid_device = None
         self.is_pointer = False
+        self.skip_repeats = False
         self.last_report = None
         self.setup_task = None
         self.closed = False
@@ -781,8 +782,11 @@ class HIDHost(ClassicMixin, BLEMixin):
     # ==================== COMMON ====================
 
     def _forward_report(self, session: DeviceSession, data: bytes):
-        """Deduplicate the log line and forward an HID report to UHID."""
-        if data != session.last_report:
+        """Forward an HID report to UHID, dropping repeats when the device has no relative inputs."""
+        if data == session.last_report:
+            if session.skip_repeats:
+                return
+        else:
             log.debug(f"Report: {data.hex()}")
             session.last_report = data
         if session.uhid_device:
@@ -861,6 +865,8 @@ class HIDHost(ClassicMixin, BLEMixin):
                 session.uhid_loop.call_later(0.5, node.discover_input_paths)
             session.uhid_device = node
             session.uhid_loop.add_reader(node.fd, self._on_uhid_output, session)
+            session.last_report = None
+            session.skip_repeats = not descriptor_has_relative_input(descriptor)
             session.is_pointer = descriptor_is_pointer(descriptor)
             if session.is_pointer:
                 log.info("Pointer device: cursor overlay on")

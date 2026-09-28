@@ -598,6 +598,16 @@ class HIDHost(ClassicMixin, BLEMixin):
         if self._sessions_changed:
             self._sessions_changed.set()
 
+    def _update_read_batching(self):
+        """Batch HCI reads while any device is streaming reports, read per packet otherwise."""
+        reads = getattr(self.transport, 'reads', None)
+        if reads is None:
+            return
+        if any(s.uhid_device for s in self.sessions.values()):
+            reads.start()
+        else:
+            reads.stop()
+
     def _track_task(self, task):
         self._connection_tasks.add(task)
         task.add_done_callback(self._connection_tasks.discard)
@@ -655,6 +665,7 @@ class HIDHost(ClassicMixin, BLEMixin):
         if self.sessions.get(session.address) is session:
             del self.sessions[session.address]
             self._notify_sessions_changed()
+            self._update_read_batching()
 
         setup = session.setup_task
         if setup and not setup.done() and setup is not asyncio.current_task():

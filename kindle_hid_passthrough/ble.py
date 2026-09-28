@@ -157,6 +157,7 @@ class BLEMixin:
         self._load_cached_descriptor(session)
         await self._setup_ble_hid(session)
         log.success(f"[BLE] {self._format_device(session.address)} receiving HID reports")
+        self._update_read_batching()
 
     async def _read_ble_battery(self, session):
         """Subscribe to Battery Level (0x2A19) and read it once, if present."""

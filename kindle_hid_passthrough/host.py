@@ -878,6 +878,7 @@ class HIDHost(ClassicMixin, BLEMixin):
             session.uhid_loop.add_reader(node.fd, self._on_uhid_output, session)
             session.last_report = None
             session.skip_repeats = not descriptor_has_relative_input(descriptor)
+            self._update_read_batching()
             session.is_pointer = descriptor_is_pointer(descriptor)
             if session.is_pointer:
                 log.info("Pointer device: cursor overlay on")

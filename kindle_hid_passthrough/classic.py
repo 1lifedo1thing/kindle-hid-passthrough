@@ -321,7 +321,6 @@ class ClassicMixin:
         if not connection.is_encrypted:
             log.warning("[Classic] Link is not encrypted, the peer may drop it")
         log.success(f"[Classic] {self._format_device(session.address)} receiving HID reports")
-        self._update_read_batching()
 
     def _is_classic_allowed(self, addr_str: str) -> bool:
         """Check if a Classic address should get an HID session.

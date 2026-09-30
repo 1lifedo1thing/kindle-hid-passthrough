@@ -157,9 +157,6 @@ class FakeHost(classic.ClassicMixin):
     def _finalize_classic_hid(self, session):
         session.ready = True
 
-    def _update_read_batching(self):
-        pass
-
     async def _query_classic_sdp(self, session):
         pass
 

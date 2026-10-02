@@ -251,6 +251,7 @@ async def create_bumble_device(transport_spec=None, configure=None):
         )
 
         await device.power_on()
+        device.irk = (bytes(device.public_address) * 3)[:16]
         log.success(f"Device powered on: {device.public_address}")
     except BaseException:
         try:

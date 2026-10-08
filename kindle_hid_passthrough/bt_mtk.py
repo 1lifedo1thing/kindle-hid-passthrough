@@ -4,6 +4,7 @@
 import glob
 import os
 import signal
+import subprocess
 import time
 
 from bt_chip import BtChip, run
@@ -21,6 +22,8 @@ _STOCK_BT_JOBS = ('acsbtfd', 'btmanagerd')
 # Shared Wi-Fi/CONSYS combo processes — killing one can drop Wi-Fi. Never touch.
 _CRITICAL_COMMS = ('wmt_service', 'mtk_wmtd', 'wifid', 'wifim',
                    'stp_main', 'mtk_stp_psm', 'connfem')
+
+WMT_CLI = '/usr/bin/wmt_cli'
 
 
 def _find_bt_module(patterns=None):
@@ -196,3 +199,13 @@ class MtkChip(BtChip):
 
         log.warning(f"{device_path} still busy after cleanup")
         return False
+
+    def pre_open(self):
+        if not os.path.exists(WMT_CLI):
+            return
+        try:
+            r = subprocess.run([WMT_CLI, 'bluetooth', 'on'], capture_output=True, timeout=10)
+        except subprocess.TimeoutExpired:
+            raise RuntimeError("wmt_service has not brought Bluetooth up yet")
+        if r.returncode != 0:
+            log.warning(f"wmt_cli bluetooth on exited {r.returncode}, opening anyway")

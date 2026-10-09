@@ -84,6 +84,7 @@ class DeviceSession:
         self.is_pointer = False
         self.skip_repeats = False
         self.last_report = None
+        self.last_change_at = 0.0
         self.setup_task = None
         self.closed = False
         self.teardown_done = asyncio.Event()
@@ -799,6 +800,10 @@ class HIDHost(ClassicMixin, BLEMixin):
                 return
         else:
             log.debug(f"Report: {data.hex()}")
+            now = time.monotonic()
+            if session.last_change_at and now - session.last_change_at >= 1.0:
+                log.info(f"Input after {now - session.last_change_at:.1f}s idle: {data.hex()}")
+            session.last_change_at = now
             session.last_report = data
         if session.uhid_device:
             try:

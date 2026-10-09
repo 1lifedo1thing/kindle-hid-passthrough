@@ -4,6 +4,7 @@
 import logging
 import os
 import struct
+import time
 from typing import Optional
 
 __all__ = ['UHIDDevice', 'UHIDError', 'Bus', 'sanitize_digitizer']
@@ -150,6 +151,26 @@ UHID_DATA_MAX = 4096
 UHID_EVENT_MAX = 4376
 # Offset of uhid_output_req.size, which follows its data[UHID_DATA_MAX].
 UHID_OUTPUT_SIZE_OFFSET = 4 + UHID_DATA_MAX
+
+CPU_BOOST_PATH = '/sys/devices/system/cpu/cpufreq/ondemand/override'
+CPU_BOOST_SECONDS = '2'
+CPU_BOOST_INTERVAL = 1.0
+
+_last_boost = 0.0
+
+
+def _boost_cpu():
+    """Give input the full-speed window the Kindle gives a touch (#225)."""
+    global _last_boost
+    now = time.monotonic()
+    if now - _last_boost < CPU_BOOST_INTERVAL:
+        return
+    _last_boost = now
+    try:
+        with open(CPU_BOOST_PATH, 'w') as f:
+            f.write(CPU_BOOST_SECONDS)
+    except OSError:
+        pass
 
 
 class Bus:
@@ -326,6 +347,8 @@ class UHIDDevice:
 
         if len(data) > UHID_DATA_MAX:
             raise UHIDError(f"Input data too large: {len(data)} > {UHID_DATA_MAX}")
+
+        _boost_cpu()
 
         # Pack UHID_INPUT2 event
         # Format: type(L) size(H) data(4096s)

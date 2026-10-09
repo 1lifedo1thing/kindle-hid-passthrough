@@ -17,10 +17,11 @@ device is missing, saving and restoring the original values.
 import glob
 import os
 import struct
+import time
 
 from logging_utils import log
 
-__all__ = ['CpuLatencyHold']
+__all__ = ['CpuLatencyHold', 'boost_cpu']
 
 CPU_DMA_LATENCY_DEV = '/dev/cpu_dma_latency'
 CPUIDLE_GLOB = '/sys/devices/system/cpu/cpu*/cpuidle'
@@ -28,6 +29,26 @@ CPUIDLE_GLOB = '/sys/devices/system/cpu/cpu*/cpuidle'
 UART_RX_FIFO_BYTES = 32   # i.MX UART RX FIFO depth
 BITS_PER_BYTE = 10        # 8N1 on the wire
 FIFO_SAFETY = 0.5         # the RX interrupt trips well before the FIFO is full
+
+CPU_BOOST_PATH = '/sys/devices/system/cpu/cpufreq/ondemand/override'
+CPU_BOOST_SECONDS = '2'
+CPU_BOOST_INTERVAL = 1.0
+
+_last_boost = 0.0
+
+
+def boost_cpu():
+    """Give input the full-speed window the Kindle gives a touch (#225)."""
+    global _last_boost
+    now = time.monotonic()
+    if now - _last_boost < CPU_BOOST_INTERVAL:
+        return
+    _last_boost = now
+    try:
+        with open(CPU_BOOST_PATH, 'w') as f:
+            f.write(CPU_BOOST_SECONDS)
+    except OSError:
+        pass
 
 
 def _read_int(path):

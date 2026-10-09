@@ -6,6 +6,8 @@ import os
 import struct
 from typing import Optional
 
+from cpu_latency import boost_cpu
+
 __all__ = ['UHIDDevice', 'UHIDError', 'Bus', 'sanitize_digitizer']
 
 logger = logging.getLogger(__name__)
@@ -326,6 +328,8 @@ class UHIDDevice:
 
         if len(data) > UHID_DATA_MAX:
             raise UHIDError(f"Input data too large: {len(data)} > {UHID_DATA_MAX}")
+
+        boost_cpu()
 
         # Pack UHID_INPUT2 event
         # Format: type(L) size(H) data(4096s)

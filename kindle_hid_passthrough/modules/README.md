@@ -22,11 +22,11 @@ Legend: ✅ have it · ⚠️ built, not yet device-tested · ❌ missing · n/a
 | Model | Codename | Chip | Kernel (`uname -r`) | uhid.ko status | uinput.ko status |
 |-------|----------|------|---------------------|----------------|------------------|
 | Oasis (2016) | duet | BCM4343 | 3.0.35-lab126 | ❌ needs uhid backport (kernel predates mainline uhid) | ❌ |
-| Basic 2 (2016) | heisenberg | BCM4343 | 3.10.53-lab126 | ⚠️ build 409749 | ❌ |
-| Oasis 2 (2017) | zelda | BCM4343 | 4.1.15-lab126 | ✅ builds 409745, 443455 | ✅ build 443455 |
-| Paperwhite 4 (2018) | rex | BCM4343 | 4.1.15-lab126 | ✅ builds 435186, 476967 · ⚠️ builds 337283, 360278 | ⚠️ build 476967 |
-| Basic 3 (2019) | rex | BCM4343 | 4.1.15-lab126 | ✅ builds 435186, 476967 · ⚠️ build 360278 | ⚠️ build 476967 |
-| Oasis 3 (2019) | zelda | BCM4343 | 4.1.15-lab126 | ✅ builds 409745, 443455 | ✅ build 443455 |
+| Basic 2 (2016) | heisenberg | BCM4343 | 3.10.53-lab126 | ⚠️ build 409749 | ⚠️ build 409749 |
+| Oasis 2 (2017) | zelda | BCM4343 | 4.1.15-lab126 | ✅ builds 409745, 443455 | ✅ build 443455 · ⚠️ build 409745 |
+| Paperwhite 4 (2018) | rex | BCM4343 | 4.1.15-lab126 | ✅ builds 435186, 476967 · ⚠️ builds 337283, 360278 | ⚠️ builds 337283, 435186, 476967 |
+| Basic 3 (2019) | rex | BCM4343 | 4.1.15-lab126 | ✅ builds 435186, 476967 · ⚠️ build 360278 | ⚠️ builds 435186, 476967 |
+| Oasis 3 (2019) | zelda | BCM4343 | 4.1.15-lab126 | ✅ builds 409745, 443455 | ✅ build 443455 · ⚠️ build 409745 |
 | Paperwhite 5 (2021) | — | MediaTek | — | n/a (native `/dev/uhid`) | n/a |
 | Basic 4 (2022) | — | MediaTek | — | n/a | n/a |
 | Scribe (2022) | — | MediaTek | — | n/a | n/a |

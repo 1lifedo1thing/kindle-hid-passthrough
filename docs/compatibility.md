@@ -21,6 +21,21 @@ Every Kindle and Bluetooth device that someone reported working in the issues an
 | Colorsoft (2024) | MediaTek | Untested | Warmth mappings tested on a Signature Edition [kbm#81](https://github.com/zampierilucas/kindle-button-mapper-rs/issues/81) | |
 | Scribe 3 and Scribe Colorsoft (2025) | MediaTek | Untested | | |
 
+### Expected to work, not tested yet
+
+These share the board, Bluetooth chip and kernel with a model above, and KHP already recognises their device codes. Storage, colour and 3G/4G variants of every model above are in the same position.
+
+| Kindle | Same hardware as | Notes |
+|---|---|---|
+| Kindle Kids Edition (2019) | Basic 3 | Ships on its own firmware branch, so its build may need a new uhid.ko |
+| Paperwhite Kids (2021) | Paperwhite 5 | |
+| Kindle Kids (2022) | Basic 4 | |
+| Kindle Kids (2024) | Basic 5 | |
+| Paperwhite Kids (2024) | Paperwhite 6 | |
+| Colorsoft Kids (2025) | Colorsoft | |
+
+Kindles older than 2016 (Paperwhite 3, Voyage, Kindle 7th gen and earlier) have no Bluetooth hardware and can't work.
+
 ## Gamepads
 
 | Device | Link | Kindle | Notes |

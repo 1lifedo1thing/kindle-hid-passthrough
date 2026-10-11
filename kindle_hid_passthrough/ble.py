@@ -3,6 +3,7 @@
 
 import asyncio
 import time
+from contextlib import closing
 
 from bumble.core import AdvertisingData, BT_LE_TRANSPORT, InvalidStateError
 from bumble.device import Device, Peer
@@ -20,15 +21,24 @@ from bumble.gatt import (
 )
 from bumble.hci import (
     Address,
+    HCI_Constant,
     HCI_LE_Add_Device_To_Filter_Accept_List_Command,
     HCI_LE_Clear_Filter_Accept_List_Command,
+    HCI_LE_Connection_Update_Command,
     HCI_LE_Create_Connection_Cancel_Command,
     HCI_LE_Create_Connection_Command,
     OwnAddressType,
+    Role,
 )
+from bumble.l2cap import (
+    L2CAP_CONNECTION_PARAMETERS_ACCEPTED_RESULT,
+    ChannelManager,
+    L2CAP_Connection_Parameter_Update_Response,
+)
+from bumble.utils import EventWatcher
 
 from config import Protocol, config, normalize_addr, clean_device_name
-from logging_utils import log
+from logging_utils import errstr, log
 
 HID_REPORT_TYPE_INPUT = 1
 HID_REPORT_TYPE_OUTPUT = 2
@@ -157,6 +167,49 @@ class BLEMixin:
         self._load_cached_descriptor(session)
         await self._setup_ble_hid(session)
         log.success(f"[BLE] {self._format_device(session.address)} receiving HID reports")
+
+    def _on_l2cap_conn_param_request(self, connection, cid, request):
+        """Accept a peripheral's L2CAP parameter request, one LL update at a time."""
+        manager = self.device.l2cap_channel_manager
+        if connection.role != Role.CENTRAL:
+            ChannelManager.on_l2cap_connection_parameter_update_request(manager, connection, cid, request)
+            return
+
+        manager.send_control_frame(connection, cid, L2CAP_Connection_Parameter_Update_Response(
+            identifier=request.identifier,
+            result=L2CAP_CONNECTION_PARAMETERS_ACCEPTED_RESULT,
+        ))
+        if connection in self._ble_param_updates:
+            log.debug(f"[BLE] Parameter update already in flight for {connection.peer_address}, skipping")
+            return
+        self._ble_param_updates.add(connection)
+        self._track_task(asyncio.create_task(self._update_ble_conn_params(connection, request)))
+
+    async def _update_ble_conn_params(self, connection, request):
+        try:
+            with closing(EventWatcher()) as watcher:
+                result = asyncio.get_running_loop().create_future()
+                watcher.once(connection, connection.EVENT_CONNECTION_PARAMETERS_UPDATE, lambda: result.set_result(0))
+                watcher.once(connection, connection.EVENT_CONNECTION_PARAMETERS_UPDATE_FAILURE, result.set_result)
+                status = await self.device.host.send_async_command(HCI_LE_Connection_Update_Command(
+                    connection_handle=connection.handle,
+                    connection_interval_min=request.interval_min,
+                    connection_interval_max=request.interval_max,
+                    max_latency=request.latency,
+                    supervision_timeout=request.timeout,
+                    min_ce_length=0,
+                    max_ce_length=0,
+                ), check_status=False)
+                if not status:
+                    status = await connection.cancel_on_disconnection(result)
+            if status:
+                log.warning(f"[BLE] Connection parameter update failed: {HCI_Constant.error_name(status)}")
+        except asyncio.CancelledError:
+            raise
+        except Exception as e:
+            log.warning(f"[BLE] Connection parameter update failed: {errstr(e)}")
+        finally:
+            self._ble_param_updates.discard(connection)
 
     async def _read_ble_battery(self, session):
         """Subscribe to Battery Level (0x2A19) and read it once, if present."""

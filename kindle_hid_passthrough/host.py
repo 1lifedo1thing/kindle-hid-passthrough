@@ -180,6 +180,7 @@ class HIDHost(ClassicMixin, BLEMixin):
         self._classic_psm_registered = False
 
         self._connection_tasks: set = set()
+        self._ble_param_updates: set = set()
 
         self.classic_devices: List[DeviceConfig] = []
         self.ble_devices: List[DeviceConfig] = []
@@ -374,6 +375,8 @@ class HIDHost(ClassicMixin, BLEMixin):
 
         self.transport, self.device = await create_bumble_device(
             self.transport_spec, configure=configure)
+        self.device.l2cap_channel_manager.on_l2cap_connection_parameter_update_request = \
+            self._on_l2cap_conn_param_request
 
         if self.device.address_resolution_offload:
             await self._set_device_privacy_modes()

@@ -52,6 +52,7 @@ class BLEMixin:
 
     BLE_INIT_WINDOW = 18.0
     BLE_SCAN_WINDOW = 8.0
+    BLE_PARAM_UPDATE_TIMEOUT = 45.0
 
     async def _run_ble_handler(self):
         """Handle BLE connections."""
@@ -191,6 +192,7 @@ class BLEMixin:
                 result = asyncio.get_running_loop().create_future()
                 watcher.once(connection, connection.EVENT_CONNECTION_PARAMETERS_UPDATE, lambda: result.set_result(0))
                 watcher.once(connection, connection.EVENT_CONNECTION_PARAMETERS_UPDATE_FAILURE, result.set_result)
+                watcher.once(connection, connection.EVENT_DISCONNECTION, lambda _: result.cancel())
                 status = await self.device.host.send_async_command(HCI_LE_Connection_Update_Command(
                     connection_handle=connection.handle,
                     connection_interval_min=request.interval_min,
@@ -201,7 +203,7 @@ class BLEMixin:
                     max_ce_length=0,
                 ), check_status=False)
                 if not status:
-                    status = await connection.cancel_on_disconnection(result)
+                    status = await asyncio.wait_for(result, self.BLE_PARAM_UPDATE_TIMEOUT)
             if status:
                 log.warning(f"[BLE] Connection parameter update failed: {HCI_Constant.error_name(status)}")
         except asyncio.CancelledError:

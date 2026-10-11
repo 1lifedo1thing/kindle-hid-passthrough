@@ -54,10 +54,9 @@ deploy:
 push-files:
     #!/usr/bin/env bash
     set -euo pipefail
-    # Every -C target must exist: unlike "-C /", tar will not create a parent that
-    # is not itself a member of the archive.
-    ssh {{host}} "mkdir -p {{remote_dir}}/scripts {{remote_dir}}/modules {{remote_dir}}/assets \
-        {{remote_dir}}/illusion/BTManager /etc/upstart /etc/udev/rules.d"
+    # tar creates missing intermediate dirs for member paths, but not the -C target.
+    ssh {{host}} "mkdir -p {{remote_dir}}/scripts {{remote_dir}}/assets \
+        {{remote_dir}}/illusion /etc/upstart /etc/udev/rules.d"
     (cd {{src_dir}}/kindle_hid_passthrough && tar cf - *.py config.ini BUILD_SHA modules/*.ko) \
         | ssh {{host}} "tar xf - -C {{remote_dir}}"
     (cd {{src_dir}}/scripts && tar cf - dev_is_keyboard.sh install.sh) \
@@ -68,14 +67,7 @@ push-files:
         | ssh {{host}} "tar xf - -C {{remote_dir}}/illusion"
     (cd {{src_dir}}/assets && tar cf - 99-hid-keyboard.rules) \
         | ssh {{host}} "tar xf - -C /etc/udev/rules.d"
-    # The upstart conf is the one file renamed in transit. Stage it under its
-    # destination name so the archive holds that single member and no directory.
-    stage=$(mktemp -d)
-    trap 'rm -r "$stage"' EXIT
-    name=$(basename '{{upstart_conf}}')
-    cp {{src_dir}}/kindle_hid_passthrough/hid-passthrough-dev.upstart "$stage/$name"
-    (cd "$stage" && tar cf - "$name") \
-        | ssh {{host}} "tar xf - -C $(dirname '{{upstart_conf}}')"
+    ssh {{host}} "cat > {{upstart_conf}}" < {{src_dir}}/kindle_hid_passthrough/hid-passthrough-dev.upstart
 
 # Register BTManager WAF app in appreg.db and install scriptlet (idempotent)
 register-waf:
@@ -92,16 +84,17 @@ register-waf:
             INSERT OR REPLACE INTO properties (handlerId, name, value) VALUES (\"$APP_ID\", \"supportedOrientation\", \"U\");"; \
         cp "$SCRIPTLET" /mnt/us/documents/BTManager.sh && chmod +x /mnt/us/documents/BTManager.sh'
 
+# The patterns are bracket-escaped so they do not match this ssh command's own
+# shell, whose cmdline contains them verbatim. Unescaped, the first pkill
+# SIGKILLs that shell and every later command in the list silently never runs.
+
 # Kill daemon and close WAF app
 kill:
-    # The patterns are bracket-escaped so they do not match this ssh command's own
-    # shell, whose cmdline contains them verbatim. Unescaped, the first pkill
-    # SIGKILLs that shell and every later command in the list silently never runs.
     -ssh {{host}} 'lipc-set-prop com.lab126.appmgrd start app://com.lab126.booklet.home 2>/dev/null; \
         /sbin/initctl stop hid-passthrough 2>/dev/null; \
         pkill -9 -f "main[.]py --daemon" 2>/dev/null; \
-        pkill -9 -f "daemon[.]py" 2>/dev/null; \
-        pkill -f "mesquite -l com[.]lzampier[.]btmanager" 2>/dev/null; \
+        pkill -f "mesquite -l com[.]lzampier[.]btmanager" 2>/dev/null && sleep 1; \
+        pkill -9 -f "mesquite -l com[.]lzampier[.]btmanager" 2>/dev/null; \
         true'
     @echo "All processes stopped."
 
@@ -200,12 +193,13 @@ run:
 
 # Deploy KOReader plugin to Kindle
 deploy-koreader:
-    @echo "Deploying KOReader plugin..."
-    ssh {{host}} "rm -rf /mnt/us/koreader/plugins/hidpassthrough.koplugin"
-    ssh {{host}} "mkdir -p /mnt/us/koreader/plugins"
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Deploying KOReader plugin..."
+    ssh {{host}} "rm -rf /mnt/us/koreader/plugins/hidpassthrough.koplugin && mkdir -p /mnt/us/koreader/plugins"
     (cd {{src_dir}}/koreader-plugin && tar cf - hidpassthrough.koplugin) \
         | ssh {{host}} "tar xf - -C /mnt/us/koreader/plugins"
-    @echo "KOReader plugin deployed!"
+    echo "KOReader plugin deployed!"
 
 # Remove autostart (removes upstart config)
 remove-autostart:
